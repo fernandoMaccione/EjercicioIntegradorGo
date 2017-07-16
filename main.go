@@ -19,8 +19,15 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/categories/:categorie/price", ejecutar)
+	router.GET("/name/:name", hola)
 
 	router.Run(":9080")
+}
+
+
+func hola (c *gin.Context){
+	name := c.Param("name")
+	c.String(http.StatusOK, "Hola!!!  " + name)
 }
 
 func ejecutar (c *gin.Context) {
