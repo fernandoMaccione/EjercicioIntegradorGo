@@ -5,7 +5,6 @@ import (
 	"sync/atomic"
 	"log"
 	"encoding/json"
-	"fmt"
 )
 
 var initialized uint32
@@ -92,8 +91,6 @@ func fillCache() bool{
 	if (err!= nil){
 		return false
 	}
-	fmt.Println(vecCat)
-
 	cache = &cacheCategories{}
 
 	for _, v := range vecCat {

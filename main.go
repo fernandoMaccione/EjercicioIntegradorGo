@@ -1,6 +1,9 @@
 package main
 import "github.com/gin-gonic/gin"
-import "net/http"
+import (
+	"net/http"
+	"errors"
+)
 
 type Prices struct {
 	Max string `json:"max"`
@@ -14,6 +17,7 @@ func main() {
 	router.GET("/categories/:category/price", ejecutar)
 	router.GET("/categories/:category/exist", checkCategory)
 	router.GET("/name/:name", hola)
+	router.GET("/categories", consult)
 
 	router.Run(":9080")
 }
@@ -37,12 +41,30 @@ func checkCategory (c *gin.Context) {
 	}
 }
 
+func consult(c *gin.Context) {
+	cacheCategories := GetInstance()
+	c.JSON(http.StatusOK, cacheCategories.getCategories())
+}
+
 func ejecutar (c *gin.Context) {
 
-	//name := c.Param("categorie")
+	name := c.Param("category")
 	//p := &Prices{"100", "2", "0"}
+	result, err := getPrice(name);
 
+	if err !=  nil{
+		c.JSON(http.StatusNotFound,  gin.H{"category": name, "status": err.Error()})
+	}else {
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func getPrice(name string) (result *Prices, err error){
 	cacheCategories := GetInstance()
-	//c.String(http.StatusOK, "Categorias " + name)
-	c.JSON(http.StatusOK, cacheCategories.getCategories())
+	if cacheCategories.contains(name){
+		result = &Prices{"100", "2", "0"}
+	}else{
+		err= errors.New("No exiset la categoria solicitada")
+	}
+	return
 }
