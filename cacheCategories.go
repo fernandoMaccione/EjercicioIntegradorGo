@@ -16,23 +16,23 @@ type Category struct {
 }
 
 type cacheCategories struct{
-	cache map[string]Category
+	cache map[string]*Category
 }
 
-func (c *cacheCategories) add (categoria Category){
+func (c *cacheCategories) add (categoria *Category){
 	if c.cache == nil{
-		c.cache = make(map[string]Category)
+		c.cache = make(map[string]*Category)
 	}
 	c.cache[categoria.Id] = categoria
 }
 
-func (c *cacheCategories) remove (categoria Category){
+func (c *cacheCategories) remove (categoria *Category){
 	if c.cache != nil{
 		delete(c.cache,categoria.Id)
 	}
 }
 
-func (c *cacheCategories) getCategories()map[string]Category{
+func (c *cacheCategories) getCategories()map[string]*Category{
 	return c.cache
 }
 
@@ -93,8 +93,9 @@ func fillCache() bool{
 	}
 	cache = &cacheCategories{}
 
-	for _, v := range vecCat {
-		cache.add(v)
+	//for _, v := range vecCat {
+	for i:=0; i<len(vecCat); i++{
+		cache.add(&vecCat[i])
 	}
 
 	return true

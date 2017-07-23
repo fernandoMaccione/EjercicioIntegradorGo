@@ -11,6 +11,7 @@ type Prices struct {
 	Min string `json:"min"`
 }
 
+
 func main() {
 	router := gin.Default()
 
@@ -59,10 +60,11 @@ func ejecutar (c *gin.Context) {
 	}
 }
 
-func getPrice(name string) (result *Prices, err error){
+func getPrice(categoria string) (result *Prices, err error){
 	cacheCategories := GetInstance()
-	if cacheCategories.contains(name){
+	if cacheCategories.contains(categoria){
 		result = &Prices{"100", "2", "0"}
+		_=listPrecios(categoria)
 	}else{
 		err= errors.New("No exiset la categoria solicitada")
 	}
