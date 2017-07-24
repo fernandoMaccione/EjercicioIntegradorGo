@@ -3,6 +3,7 @@ import "net/http"
 import (
 	"log"
 	"encoding/json"
+	"strconv"
 )
 
 
@@ -13,8 +14,6 @@ type Item struct {
 
 type Paging struct{
 	Total int32 `json:"total"`
-	Offset int32 `json:"offset"`
-	Limit int32 `json:"limit"`
 }
 
 type Respuesta struct{
@@ -23,14 +22,13 @@ type Respuesta struct{
 	Result []Item `json:"results"`
 }
 
-func listPrecios (categoria string)([]Item){
-
-	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria
+func fillPrecios (categoria string, offset int, limit int, mItem[][] Item)([][]Item, error){
+	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria + "&offset=" + strconv.Itoa( offset )+ "&limit=" + strconv.Itoa(limit)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal("NewRequest: ", err)
-		return nil
+		return mItem, err
 	}
 
 	client := &http.Client{}
@@ -38,15 +36,22 @@ func listPrecios (categoria string)([]Item){
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("Do: ", err)
-		return nil
+		return mItem, err
 	}
 
 	defer resp.Body.Close()
 
 	res := &Respuesta{}
-	res.Result = make([]Item, 0, 50)
-
 	err = json.NewDecoder(resp.Body).Decode(&res)
 
-	return res.Result
+	if mItem == nil{
+		mItem = make([][]Item, res.Paging.Total/100)
+	}
+
+	mItem[offset/100] = res.Result
+
+	if (len(res.Result)> 0 && int32(offset) < res.Paging.Total){
+		return fillPrecios(categoria, offset + 100, limit, mItem)
+	}
+	return mItem, nil
 }

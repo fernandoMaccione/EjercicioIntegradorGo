@@ -3,6 +3,7 @@ import "github.com/gin-gonic/gin"
 import (
 	"net/http"
 	"errors"
+	"fmt"
 )
 
 type Prices struct {
@@ -64,7 +65,8 @@ func getPrice(categoria string) (result *Prices, err error){
 	cacheCategories := GetInstance()
 	if cacheCategories.contains(categoria){
 		result = &Prices{"100", "2", "0"}
-		_=listPrecios(categoria)
+		mItem, _ := fillPrecios(categoria, 0,2,nil)
+		fmt.Printf("%+v\n", mItem)
 	}else{
 		err= errors.New("No exiset la categoria solicitada")
 	}
