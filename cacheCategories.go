@@ -2,7 +2,6 @@ package main
 import "sync"
 import (
 	"sync/atomic"
-	"encoding/json"
 )
 
 var initialized uint32
@@ -66,19 +65,12 @@ func GetInstance() *cacheCategories {
 func fillCache() bool{
 
 	url := "https://api.mercadolibre.com/sites/MLA/categories"
-	resp, err := doRequest(url, "GET")
+	vecCat := make([]Category, 0, 31)
+	err := doRequest(url, "GET",&vecCat)
 	if err != nil {
 		return false
 	}
 
-	defer resp.Body.Close()
-
-	vecCat := make([]Category, 0, 31)
-
-	err = json.NewDecoder(resp.Body).Decode(&vecCat)
-	if (err!= nil){
-		return false
-	}
 	cache = &cacheCategories{}
 
 	//for _, v := range vecCat {

@@ -1,6 +1,5 @@
 package main
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -64,16 +63,12 @@ var fillPreciosPorRelevancia fillPrice = func(categoria string)([][]Item, error)
 func fillPrecios(categoria string, offset int, limit int, mItem[][] Item, orden string, f calcularOffset ,page int, porcentajeMuestra float32)([][]Item, error){
 	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
 
-	resp, err := doRequest(url, "GET")
-	if err != nil {
-		return mItem, err
-	}
 	res := &Respuesta{}
-	err = json.NewDecoder(resp.Body).Decode(&res)
+	err := doRequest(url, "GET", &res)
 	if err != nil {
 		return mItem, err
 	}
-	resp.Body.Close()
+
 	var pageTotales int
 	offset, pageTotales = f (res.Paging.Total, limit, offset, porcentajeMuestra)
 	if mItem == nil{
