@@ -2,35 +2,32 @@ package main
 import "sync"
 import (
 	"sync/atomic"
-	"errors"
+	"proyecto1/categories"
+	"proyecto1/library"
 )
 
 var initialized uint32
 var mu sync.Mutex
 
-type Category struct {
-	Id string
-	Name string
-}
 
 type cacheCategories struct{
-	cache map[string]*Category
+	cache map[string]*categories.Category
 }
 
-func (c *cacheCategories) add (categoria *Category){
+func (c *cacheCategories) add (categoria *categories.Category){
 	if c.cache == nil{
-		c.cache = make(map[string]*Category)
+		c.cache = make(map[string]*categories.Category)
 	}
 	c.cache[categoria.Id] = categoria
 }
 
-func (c *cacheCategories) remove (categoria *Category){
+func (c *cacheCategories) remove (categoria *categories.Category){
 	if c.cache != nil{
 		delete(c.cache,categoria.Id)
 	}
 }
 
-func (c *cacheCategories) getCategory(key string)(*Category, error) {
+func (c *cacheCategories) getCategory(key string)(*categories.Category, error) {
 
 	cat,exist := c.cache[key]
 	if exist {
@@ -39,8 +36,8 @@ func (c *cacheCategories) getCategory(key string)(*Category, error) {
 		mu.Lock()
 		defer mu.Unlock()
 		cat,exist := c.cache[key]
-		if (!exist) { //Consulto de nuevo por que si justo entraron dos solicitudes pidiendo la misma entrada
-			cat = &Category{Id: key}
+		if (!exist) { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
+			cat = &categories.Category{Id: key}
 			c.add(cat)
 			return cat, nil
 		}else {
@@ -49,7 +46,7 @@ func (c *cacheCategories) getCategory(key string)(*Category, error) {
 	}
 }
 
-func (c *cacheCategories) getCategories()map[string]*Category{
+func (c *cacheCategories) getCategories()map[string]*categories.Category{
 	return c.cache
 }
 
@@ -83,8 +80,8 @@ func GetInstanceCache() *cacheCategories {
 func fillCache() bool{
 
 	url := "https://api.mercadolibre.com/sites/MLA/categories"
-	vecCat := make([]Category, 0, 31)
-	err := doRequest(url, "GET",&vecCat)
+	vecCat := make([]categories.Category, 0, 31)
+	err := library.DoRequest(url, "GET",&vecCat)
 	if err != nil {
 		return false
 	}

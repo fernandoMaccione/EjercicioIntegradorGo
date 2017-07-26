@@ -2,8 +2,8 @@ package main
 import "github.com/gin-gonic/gin"
 import (
 	"net/http"
-	"errors"
-	"fmt"
+	/*"errors"
+	"fmt"*/
 )
 
 type Prices struct {
@@ -16,8 +16,8 @@ type Prices struct {
 func main() {
 	router := gin.Default()
 
-	router.GET("/categories/:category/price", ejecutar)
-	router.GET("/categories/:category/exist", checkCategory)
+	router.GET("/categories/:categories/price", ejecutar)
+	router.GET("/categories/:categories/exist", checkCategory)
 	router.GET("/name/:name", hola)
 	router.GET("/categories", consult)
 
@@ -34,12 +34,12 @@ func hola (c *gin.Context){
 func checkCategory (c *gin.Context) {
 
 	cacheCategories := GetInstanceCache()
-	name := c.Param("category")
+	name := c.Param("categories")
 	if cacheCategories.contains(name){
 		cat := cacheCategories.getCategories()[name]
 		c.JSON(http.StatusOK, cat)
 	}else {
-		c.JSON(http.StatusNotFound,  gin.H{"category": name, "status": http.StatusNotFound})
+		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": http.StatusNotFound})
 	}
 }
 
@@ -50,12 +50,12 @@ func consult(c *gin.Context) {
 
 func ejecutar (c *gin.Context) {
 
-	name := c.Param("category")
+	name := c.Param("categories")
 	//p := &Prices{"100", "2", "0"}
 	result, err := getPrice(name);
 
 	if err !=  nil{
-		c.JSON(http.StatusNotFound,  gin.H{"category": name, "status": err.Error()})
+		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": err.Error()})
 	}else {
 		c.JSON(http.StatusOK, result)
 	}

@@ -1,4 +1,4 @@
-package main
+package library
 import (
 	"net/http"
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-func doRequest(url string, method string, v interface{}) (error){
+func DoRequest(url string, method string, v interface{}) (error){
 	fmt.Println(method + url )
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

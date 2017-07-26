@@ -1,7 +1,8 @@
-package main
+package categories
 import (
 	"strconv"
 	"time"
+	"proyecto1/library"
 )
 
 type Item struct {
@@ -61,10 +62,10 @@ var fillPreciosPorRelevancia fillPrice = func(categoria string)([][]Item, error)
 
 
 func fillPrecios(categoria string, offset int, limit int, mItem[][] Item, orden string, f calcularOffset ,page int, porcentajeMuestra float32)([][]Item, error){
-	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
+	url := "https://api.mercadolibre.com/sites/MLA/search?categories=" + categoria + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
 
 	res := &Respuesta{}
-	err := doRequest(url, "GET", &res)
+	err := library.DoRequest(url, "GET", &res)
 	if err != nil {
 		return mItem, err
 	}
