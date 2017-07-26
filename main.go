@@ -33,7 +33,7 @@ func hola (c *gin.Context){
 
 func checkCategory (c *gin.Context) {
 
-	cacheCategories := GetInstance()
+	cacheCategories := GetInstanceCache()
 	name := c.Param("category")
 	if cacheCategories.contains(name){
 		cat := cacheCategories.getCategories()[name]
@@ -44,7 +44,7 @@ func checkCategory (c *gin.Context) {
 }
 
 func consult(c *gin.Context) {
-	cacheCategories := GetInstance()
+	cacheCategories := GetInstanceCache()
 	c.JSON(http.StatusOK, cacheCategories.getCategories())
 }
 
@@ -62,14 +62,17 @@ func ejecutar (c *gin.Context) {
 }
 
 func getPrice(categoria string) (result *Prices, err error){
-	cacheCategories := GetInstance()
-	if cacheCategories.contains(categoria){
+	cacheCategories := GetInstanceCache()
+	/*if cacheCategories.contains(categoria){
 		result = &Prices{"100", "2", "0"}
 	//	mItem, _ := fillPreciosPorMuestraTotal(categoria)
 		mItem, _ := fillPreciosPorRelevancia(categoria)
 		fmt.Printf("%+v\n", mItem)
 	}else{
 		err= errors.New("No exiset la categoria solicitada")
-	}
+	}*/
+	cacheCategories.getCategory(categoria)
+
+
 	return
 }

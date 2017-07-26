@@ -2,6 +2,7 @@ package main
 import "sync"
 import (
 	"sync/atomic"
+	"errors"
 )
 
 var initialized uint32
@@ -29,22 +30,39 @@ func (c *cacheCategories) remove (categoria *Category){
 	}
 }
 
+func (c *cacheCategories) getCategory(key string)(*Category, error) {
+
+	cat,exist := c.cache[key]
+	if exist {
+		return cat, nil
+	}else{
+		mu.Lock()
+		defer mu.Unlock()
+		cat,exist := c.cache[key]
+		if (!exist) { //Consulto de nuevo por que si justo entraron dos solicitudes pidiendo la misma entrada
+			cat = &Category{Id: key}
+			c.add(cat)
+			return cat, nil
+		}else {
+			return cat, nil
+		}
+	}
+}
+
 func (c *cacheCategories) getCategories()map[string]*Category{
 	return c.cache
 }
 
 func (c *cacheCategories) contains (key string) bool{
-	if c.cache != nil{
-		_,existe := c.cache[key]
-		if existe {
-			return true
-		}
+	_,existe := c.cache[key]
+	if existe {
+		return true
 	}
 	return false
 }
 
 var cache *cacheCategories
-func GetInstance() *cacheCategories {
+func GetInstanceCache() *cacheCategories {
 
 	if atomic.LoadUint32(&initialized) == 1 {
 		return cache
