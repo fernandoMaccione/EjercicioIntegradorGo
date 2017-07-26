@@ -1,9 +1,7 @@
 package main
 import "sync"
-import "net/http"
 import (
 	"sync/atomic"
-	"log"
 	"encoding/json"
 )
 
@@ -68,18 +66,8 @@ func GetInstance() *cacheCategories {
 func fillCache() bool{
 
 	url := "https://api.mercadolibre.com/sites/MLA/categories"
-
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := doRequest(url, "GET")
 	if err != nil {
-		log.Fatal("NewRequest: ", err)
-		return false
-	}
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Do: ", err)
 		return false
 	}
 

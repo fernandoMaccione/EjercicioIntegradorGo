@@ -65,7 +65,8 @@ func getPrice(categoria string) (result *Prices, err error){
 	cacheCategories := GetInstance()
 	if cacheCategories.contains(categoria){
 		result = &Prices{"100", "2", "0"}
-		mItem, _ := fillPreciosPorMuestraTotal(categoria, 0,100,nil, 1)
+	//	mItem, _ := fillPreciosPorMuestraTotal(categoria)
+		mItem, _ := fillPreciosPorRelevancia(categoria)
 		fmt.Printf("%+v\n", mItem)
 	}else{
 		err= errors.New("No exiset la categoria solicitada")

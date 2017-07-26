@@ -1,16 +1,14 @@
 package main
-import "net/http"
 import (
-	"log"
 	"encoding/json"
 	"strconv"
-	"fmt"
+	"time"
 )
-
 
 type Item struct {
 	Id string `json:"id"`
 	Price float64 `json:"price"`
+	Last_Update time.Time
 }
 
 type Paging struct{
@@ -23,52 +21,69 @@ type Respuesta struct{
 	Result []Item `json:"results"`
 }
 
-func fillPreciosPorMuestraTotal(categoria string, offset int, limit int, mItem[][] Item, page int)([][]Item, error){
-	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria + "&offset=" + strconv.Itoa(offset * page)+ "&limit=" + strconv.Itoa(limit)
-	fmt.Println("page: " + strconv.Itoa(page) + url )
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Fatal("NewRequest: ", err)
-		return mItem, err
+type calcularOffset func(int, int, int, float32)(int, int)
+type fillPrice func(string)([][]Item, error)
+
+var fillPreciosPorMuestraTotal fillPrice = func (categoria string)([][]Item, error){
+	var calcularOffsetMT  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
+
+		regTotales = regTotales - limit
+		pageTotales = int(float32(regTotales/limit) * porcentajeMuestreo / 100)
+		if pageTotales != 0{
+			offsetR = regTotales / pageTotales + 1 + offset
+		}
+		return
 	}
+	var porcentajeMuestra float32 = 5 //sera un parametro
+	return fillPrecios(categoria,0,100,nil, "relevance", calcularOffsetMT, 0, porcentajeMuestra)
+}
 
-	client := &http.Client{}
+var fillPreciosPorRelevancia fillPrice = func(categoria string)([][]Item, error){
+	var calcularOffsetMAXMIN  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
+		return 1,1
+	}
+	mItem := make([][]Item, 2)
+	mItem, err :=  fillPrecios(categoria,0,1,mItem, "price_asc", calcularOffsetMAXMIN, 0, 100) //Busco el maximo
+	if (err!=nil) {return nil, err}
+	mItem, err =  fillPrecios(categoria,0,1,mItem, "price_desc", calcularOffsetMAXMIN, 1, 100) //Busco el maximo
+	if (err!=nil) {return nil, err}
 
-	resp, err := client.Do(req)
+	var calcularOffsetREL  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
+		pageTotales = int(float32(regTotales/limit) * porcentajeMuestreo / 100)
+		offsetR = limit + offset
+		return
+	}
+	var mItemRL [][]Item
+	mItemRL, err =  fillPrecios(categoria,0,100,nil, "relevance", calcularOffsetREL, 0, .1) //Busco los mas relevantes
+	mItemRL = append(mItemRL, mItem[0], mItem[1])
+	return mItemRL, err
+}
+
+
+
+func fillPrecios(categoria string, offset int, limit int, mItem[][] Item, orden string, f calcularOffset ,page int, porcentajeMuestra float32)([][]Item, error){
+	url := "https://api.mercadolibre.com/sites/MLA/search?category=" + categoria + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
+
+	resp, err := doRequest(url, "GET")
 	if err != nil {
-		log.Fatal("Do: ", err)
 		return mItem, err
 	}
 	res := &Respuesta{}
 	err = json.NewDecoder(resp.Body).Decode(&res)
+	if err != nil {
+		return mItem, err
+	}
 	resp.Body.Close()
+	var pageTotales int
+	offset, pageTotales = f (res.Paging.Total, limit, offset, porcentajeMuestra)
 	if mItem == nil{
-		var pageTotales int
-		offset, pageTotales = calcularOffset (res.Paging.Total - limit, limit)
-		mItem = make([][]Item, pageTotales +1)
+		mItem = make([][]Item, pageTotales)
 	}
 
-	mItem[page - 1] = res.Result
-
-	if (len(res.Result)> 0 && offset * page < res.Paging.Total - limit){
-		return fillPreciosPorMuestraTotal(categoria, offset, limit, mItem, page + 1)
+	mItem[page] = res.Result
+	page++
+	if (len(res.Result)> 0 &&  page < pageTotales){
+		return fillPrecios(categoria, offset, limit, mItem,orden, f, page, porcentajeMuestra)
 	}
 	return mItem, nil
-}
-
-func calcularOffset(regTotales int, limit int) (offset int, pageTotales int){
-	porcentajeMuestreo := 5 //va a ser configurable
-
-	pageTotales = (regTotales/limit + 1) * porcentajeMuestreo / 100
-	if pageTotales == 0{
-		offset = regTotales
-	}else {
-		offset = regTotales / pageTotales + 1
-	}
-
-	return
-}
-
-func fillPreciosPorRelevancia(categoria string, offset int, limit int, mItem[][] Item, page int)([][]Item, error){
-	return nil,nil
 }
