@@ -2,37 +2,39 @@ package config
 
 import (
 	"sync"
-	"EjercicioIntegradorGo/categories"
 	"sync/atomic"
 )
 
 type Config struct {
-	MethodFill categories.FillPrice
+	MethodFill int
 	PorcentItems float32
 	Limit int
 }
 var initialized uint32
 var mu sync.Mutex
-var config *Config
-func GetInstance() *Config {
+var conf *Config
+func GetInstance() (*Config,error) {
 
 	if atomic.LoadUint32(&initialized) == 1 {
-		return config
+		return conf, nil
 	}
 
 	mu.Lock()
 	defer mu.Unlock()
 
 	if initialized == 0 {
-		if fillCache() {
+		if err:=fillCache(); err ==nil {
 			atomic.StoreUint32(&initialized, 1)
+		}else{
+			return nil,err
 		}
 	}
 
-	return config
+	return conf, nil
 }
 
-func fillCache(){
+func fillCache()(error){
 	//En la versión 2 hago que esto se levante de un archivo de configuración.
-	config = &Config{MethodFill:categories.FillPreciosByRelevancia, PorcentItems:5, Limit:100}
+	conf = &Config{MethodFill: 1, PorcentItems: 5, Limit: 100}
+	return  nil
  }

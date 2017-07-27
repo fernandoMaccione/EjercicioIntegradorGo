@@ -1,4 +1,4 @@
-package main
+package cache
 import "sync"
 import (
 	"sync/atomic"
@@ -14,45 +14,43 @@ type CacheCategories struct{
 	cache map[string]*categories.Category
 }
 
-func (c *CacheCategories) add (categoria *categories.Category){
+func (c *CacheCategories) Add (category *categories.Category){
 	if c.cache == nil{
 		c.cache = make(map[string]*categories.Category)
 	}
-	c.cache[categoria.Id] = categoria
+	c.cache[category.Id] = category
 }
 
-func (c *CacheCategories) remove (categoria *categories.Category){
-	if c.cache != nil{
-		delete(c.cache,categoria.Id)
-	}
+func (c *CacheCategories) Remove (category *categories.Category){
+	delete(c.cache,category.Id)
 }
 
-func (c *CacheCategories) getCategory(key string)(*categories.Category, error) {
+func (c *CacheCategories) GetCategory(key string)(*categories.Category) {
 
 	cat,exist := c.cache[key]
 	if exist {
-		return cat, nil
+		return cat
 	}else{
 		mu.Lock()
 		defer mu.Unlock()
 		cat,exist := c.cache[key]
-		if (!exist) { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
+		if !exist { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
 			cat = &categories.Category{Id: key}
-			c.add(cat)
-			return cat, nil
+			c.Add(cat)
+			return cat
 		}else {
-			return cat, nil
+			return cat
 		}
 	}
 }
 
-func (c *CacheCategories) getCategories()map[string]*categories.Category{
+func (c *CacheCategories) GetCategories()map[string]*categories.Category{
 	return c.cache
 }
 
-func (c *CacheCategories) contains (key string) bool{
-	_,existe := c.cache[key]
-	if existe {
+func (c *CacheCategories) Contains (key string) bool{
+	_, exist := c.cache[key]
+	if exist {
 		return true
 	}
 	return false
@@ -90,7 +88,7 @@ func fillCache() bool{
 
 	//for _, v := range vecCat {
 	for i:=0; i<len(vecCat); i++{
-		cache.add(&vecCat[i])
+		cache.Add(&vecCat[i])
 	}
 
 	return true

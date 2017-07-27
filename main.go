@@ -4,19 +4,13 @@ import (
 	"net/http"
 	/*"errors"
 	"fmt"*/
+	"EjercicioIntegradorGo/categories/cache"
 )
-
-type Prices struct {
-	Max string `json:"max"`
-	Suggested string `json:"suggested"`
-	Min string `json:"min"`
-}
-
 
 func main() {
 	router := gin.Default()
 
-	router.GET("/categories/:categories/price", ejecutar)
+	router.GET("/categories/:categories/price", getPrice)
 	router.GET("/categories/:categories/exist", checkCategory)
 	router.GET("/name/:name", hola)
 	router.GET("/categories", consult)
@@ -33,10 +27,10 @@ func hola (c *gin.Context){
 
 func checkCategory (c *gin.Context) {
 
-	cacheCategories := GetInstanceCache()
+	cacheCategories := cache.GetInstanceCache()
 	name := c.Param("categories")
-	if cacheCategories.contains(name){
-		cat := cacheCategories.getCategories()[name]
+	if cacheCategories.Contains(name){
+		cat := cacheCategories.GetCategories()[name]
 		c.JSON(http.StatusOK, cat)
 	}else {
 		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": http.StatusNotFound})
@@ -44,35 +38,22 @@ func checkCategory (c *gin.Context) {
 }
 
 func consult(c *gin.Context) {
-	cacheCategories := GetInstanceCache()
-	c.JSON(http.StatusOK, cacheCategories.getCategories())
+	cacheCategories := cache.GetInstanceCache()
+	c.JSON(http.StatusOK, cacheCategories.GetCategories())
 }
 
-func ejecutar (c *gin.Context) {
+func getPrice(c *gin.Context) {
 
 	name := c.Param("categories")
-	//p := &Prices{"100", "2", "0"}
-	result, err := getPrice(name);
+
+	cacheCategories := cache.GetInstanceCache()
+
+	cat:= cacheCategories.GetCategory(name)
+	result, err := cat.GetPrices()
 
 	if err !=  nil{
 		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": err.Error()})
 	}else {
 		c.JSON(http.StatusOK, result)
 	}
-}
-
-func getPrice(categoria string) (result *Prices, err error){
-	cacheCategories := GetInstanceCache()
-	/*if CacheCategories.contains(categoria){
-		result = &Prices{"100", "2", "0"}
-	//	mItem, _ := fillPreciosPorMuestraTotal(categoria)
-		mItem, _ := fillPreciosPorRelevancia(categoria)
-		fmt.Printf("%+v\n", mItem)
-	}else{
-		err= errors.New("No exiset la categoria solicitada")
-	}*/
-	cacheCategories.getCategory(categoria)
-
-
-	return
 }
