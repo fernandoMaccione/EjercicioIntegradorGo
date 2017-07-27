@@ -3,6 +3,7 @@ package categories
 import (
 	"sync"
 	"sync/atomic"
+	config2 "EjercicioIntegradorGo/config"
 )
 
 type Prices struct {
@@ -28,7 +29,7 @@ func (c *Category) getPrices()*Prices{
 	defer c.mu.Unlock()
 
 	if c.initialized == 0 {
-		if calculatePrice() {
+		if calculatePrice(c.Id) {
 			atomic.StoreUint32(&c.initialized, 1)
 		}
 	}
@@ -36,4 +37,14 @@ func (c *Category) getPrices()*Prices{
 	return &c.prices
 }
 
-func 
+func calculatePrice(category string){
+	config := config2.GetInstance()
+	var fillPrice FillPrice = config.MethodFill
+	mItem, _ := fillPrice(category)
+
+	for _, vItem := range mItem {
+		for _, item := range vItem {
+			
+		}
+	}
+}

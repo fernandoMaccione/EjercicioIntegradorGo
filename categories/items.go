@@ -2,7 +2,7 @@ package categories
 import (
 	"strconv"
 	"time"
-	"proyecto1/library"
+	"EjercicioIntegradorGo/library"
 )
 
 type Item struct {
@@ -22,9 +22,9 @@ type Respuesta struct{
 }
 
 type calcularOffset func(int, int, int, float32)(int, int)
-type fillPrice func(string)([][]Item, error)
+type FillPrice func(string)([][]Item, error)
 
-var fillPreciosPorMuestraTotal fillPrice = func (categoria string)([][]Item, error){
+var FillPriceTotalSample FillPrice = func (categoria string)([][]Item, error){
 	var calcularOffsetMT  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
 
 		regTotales = regTotales - limit
@@ -35,17 +35,16 @@ var fillPreciosPorMuestraTotal fillPrice = func (categoria string)([][]Item, err
 		return
 	}
 	var porcentajeMuestra float32 = 5 //sera un parametro
-	return fillPrecios(categoria,0,100,nil, "relevance", calcularOffsetMT, 0, porcentajeMuestra)
+	return findItems(categoria,0,100,nil, "relevance", calcularOffsetMT, 0, porcentajeMuestra)
 }
-
-var fillPreciosPorRelevancia fillPrice = func(categoria string)([][]Item, error){
+var FillPreciosByRelevancia FillPrice = func(categoria string)([][]Item, error){
 	var calcularOffsetMAXMIN  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
 		return 1,1
 	}
 	mItem := make([][]Item, 2)
-	mItem, err :=  fillPrecios(categoria,0,1,mItem, "price_asc", calcularOffsetMAXMIN, 0, 100) //Busco el maximo
+	mItem, err :=  findItems(categoria,0,1,mItem, "price_asc", calcularOffsetMAXMIN, 0, 100) //Busco el maximo
 	if (err!=nil) {return nil, err}
-	mItem, err =  fillPrecios(categoria,0,1,mItem, "price_desc", calcularOffsetMAXMIN, 1, 100) //Busco el maximo
+	mItem, err =  findItems(categoria,0,1,mItem, "price_desc", calcularOffsetMAXMIN, 1, 100) //Busco el maximo
 	if (err!=nil) {return nil, err}
 
 	var calcularOffsetREL  calcularOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
@@ -54,16 +53,12 @@ var fillPreciosPorRelevancia fillPrice = func(categoria string)([][]Item, error)
 		return
 	}
 	var mItemRL [][]Item
-	mItemRL, err =  fillPrecios(categoria,0,100,nil, "relevance", calcularOffsetREL, 0, .1) //Busco los mas relevantes
+	mItemRL, err =  findItems(categoria,0,100,nil, "relevance", calcularOffsetREL, 0, .1) //Busco los mas relevantes
 	mItemRL = append(mItemRL, mItem[0], mItem[1])
 	return mItemRL, err
 }
-
-
-
-func fillPrecios(categoria string, offset int, limit int, mItem[][] Item, orden string, f calcularOffset ,page int, porcentajeMuestra float32)([][]Item, error){
+func findItems(categoria string, offset int, limit int, mItem[][] Item, orden string, f calcularOffset ,page int, porcentajeMuestra float32)([][]Item, error){
 	url := "https://api.mercadolibre.com/sites/MLA/search?categories=" + categoria + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
-
 	res := &Respuesta{}
 	err := library.DoRequest(url, "GET", &res)
 	if err != nil {
@@ -75,11 +70,10 @@ func fillPrecios(categoria string, offset int, limit int, mItem[][] Item, orden 
 	if mItem == nil{
 		mItem = make([][]Item, pageTotales)
 	}
-
 	mItem[page] = res.Result
 	page++
 	if (len(res.Result)> 0 &&  page < pageTotales){
-		return fillPrecios(categoria, offset, limit, mItem,orden, f, page, porcentajeMuestra)
+		return findItems(categoria, offset, limit, mItem,orden, f, page, porcentajeMuestra)
 	}
 	return mItem, nil
 }

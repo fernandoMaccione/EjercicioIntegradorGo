@@ -2,32 +2,32 @@ package main
 import "sync"
 import (
 	"sync/atomic"
-	"proyecto1/categories"
-	"proyecto1/library"
+	"EjercicioIntegradorGo/categories"
+	"EjercicioIntegradorGo/library"
 )
 
 var initialized uint32
 var mu sync.Mutex
 
 
-type cacheCategories struct{
+type CacheCategories struct{
 	cache map[string]*categories.Category
 }
 
-func (c *cacheCategories) add (categoria *categories.Category){
+func (c *CacheCategories) add (categoria *categories.Category){
 	if c.cache == nil{
 		c.cache = make(map[string]*categories.Category)
 	}
 	c.cache[categoria.Id] = categoria
 }
 
-func (c *cacheCategories) remove (categoria *categories.Category){
+func (c *CacheCategories) remove (categoria *categories.Category){
 	if c.cache != nil{
 		delete(c.cache,categoria.Id)
 	}
 }
 
-func (c *cacheCategories) getCategory(key string)(*categories.Category, error) {
+func (c *CacheCategories) getCategory(key string)(*categories.Category, error) {
 
 	cat,exist := c.cache[key]
 	if exist {
@@ -46,11 +46,11 @@ func (c *cacheCategories) getCategory(key string)(*categories.Category, error) {
 	}
 }
 
-func (c *cacheCategories) getCategories()map[string]*categories.Category{
+func (c *CacheCategories) getCategories()map[string]*categories.Category{
 	return c.cache
 }
 
-func (c *cacheCategories) contains (key string) bool{
+func (c *CacheCategories) contains (key string) bool{
 	_,existe := c.cache[key]
 	if existe {
 		return true
@@ -58,8 +58,8 @@ func (c *cacheCategories) contains (key string) bool{
 	return false
 }
 
-var cache *cacheCategories
-func GetInstanceCache() *cacheCategories {
+var cache *CacheCategories
+func GetInstanceCache() *CacheCategories {
 
 	if atomic.LoadUint32(&initialized) == 1 {
 		return cache
@@ -86,7 +86,7 @@ func fillCache() bool{
 		return false
 	}
 
-	cache = &cacheCategories{}
+	cache = &CacheCategories{}
 
 	//for _, v := range vecCat {
 	for i:=0; i<len(vecCat); i++{

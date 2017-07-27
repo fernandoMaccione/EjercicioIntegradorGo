@@ -63,7 +63,7 @@ func ejecutar (c *gin.Context) {
 
 func getPrice(categoria string) (result *Prices, err error){
 	cacheCategories := GetInstanceCache()
-	/*if cacheCategories.contains(categoria){
+	/*if CacheCategories.contains(categoria){
 		result = &Prices{"100", "2", "0"}
 	//	mItem, _ := fillPreciosPorMuestraTotal(categoria)
 		mItem, _ := fillPreciosPorRelevancia(categoria)
