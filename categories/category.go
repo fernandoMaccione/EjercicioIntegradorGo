@@ -6,6 +6,7 @@ import (
 	"time"
 	"errors"
 	"EjercicioIntegradorGo/config"
+	"log"
 )
 
 type Prices struct {
@@ -26,15 +27,17 @@ type Category struct {
 }
 
 func (c *Category) GetPrices()(*Prices, error){
+
 	if atomic.LoadUint32(&c.initialized) == 1 {
+		go validateState(c)
 		return c.prices, nil
 	}
-
+	//Tengo que probar de sincronizar esto con una gorutina
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.initialized == 0 {
-		if err := calculatePrice(c.Id, c); err == nil {
+		if err := calculatePrice(c); err == nil {
 			atomic.StoreUint32(&c.initialized, 1)
 		}else{
 			return nil, err
@@ -44,7 +47,20 @@ func (c *Category) GetPrices()(*Prices, error){
 	return c.prices, nil
 }
 
-func  calculatePrice(category string, c *Category)(err error){
+func validateState(c *Category)(err error){
+	conf, _ := config.GetInstance()
+	if time.Since(c.lastUpdateTotal).Hours() > conf.HourUpdateTotal.Hours(){
+		err = calculatePrice(c)
+	}else if time.Since(c.lastUpdatePartial).Minutes() > conf.MinUpdatePartial.Minutes(){
+		//calcatePricePartial(c) Pregunto item x item cual fue el que tuvo novedad y actualizo las precios solo en base a ese.
+	}
+	if (err != nil){
+		log.Fatal("ValidateState: ", err)
+	}
+	return
+}
+
+func  calculatePrice( c *Category)(err error){
 	conf, err := config.GetInstance()
 	if err != nil {return err}
 	var fillPrice FillPrice
@@ -53,7 +69,7 @@ func  calculatePrice(category string, c *Category)(err error){
 	}else{
 		fillPrice = FillPriceTotalItems
 	}
-	mItem, err := fillPrice(category)
+	mItem, err := fillPrice(c.Id)
 	if err !=nil{
 		return
 	}
