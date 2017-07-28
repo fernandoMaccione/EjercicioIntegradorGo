@@ -29,10 +29,12 @@ type Category struct {
 func (c *Category) GetPrices()(*Prices, error){
 
 	if atomic.LoadUint32(&c.initialized) == 1 {
-		go validateState(c)
-		return c.prices, nil
+		//go validateState(c)
+		//return c.prices
+		err := validateState(c)
+		return c.prices, err
 	}
-	//Tengo que probar de sincronizar esto con una gorutina
+	//Tengo que probar de sincronizar esto con una gorutina en vez de Mutex
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
