@@ -1,12 +1,28 @@
 <component name="libraryTable">
   <library name="GOPATH &lt;proyecto1&gt;">
     <CLASSES>
+      <root url="file://$PROJECT_DIR$/../EjeFuncCine2" />
       <root url="file://$PROJECT_DIR$/../github.com" />
+      <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../EjeFuncCine" />
+      <root url="file://$PROJECT_DIR$/../FAFErrorApi" />
+      <root url="file://$PROJECT_DIR$/../Eje1" />
+      <root url="file://$PROJECT_DIR$/../EjeClase1" />
       <root url="file://$PROJECT_DIR$/../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../EjerClase3" />
+      <root url="file://$PROJECT_DIR$/../ejercicio_5" />
     </CLASSES>
     <SOURCES>
+      <root url="file://$PROJECT_DIR$/../EjeFuncCine2" />
       <root url="file://$PROJECT_DIR$/../github.com" />
+      <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../EjeFuncCine" />
+      <root url="file://$PROJECT_DIR$/../FAFErrorApi" />
+      <root url="file://$PROJECT_DIR$/../Eje1" />
+      <root url="file://$PROJECT_DIR$/../EjeClase1" />
       <root url="file://$PROJECT_DIR$/../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../EjerClase3" />
+      <root url="file://$PROJECT_DIR$/../ejercicio_5" />
     </SOURCES>
     <excluded>
       <root url="file://$PROJECT_DIR$" />

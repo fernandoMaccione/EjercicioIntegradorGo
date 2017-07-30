@@ -11,7 +11,6 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/categories/:categories/price", getPrice)
-	router.GET("/categories/:categories/exist", checkCategory)
 	router.GET("/name/:name", hola)
 	router.GET("/categories", consult)
 
@@ -25,35 +24,24 @@ func hola (c *gin.Context){
 }
 
 
-func checkCategory (c *gin.Context) {
-
-	cacheCategories := cache.GetInstanceCache()
-	name := c.Param("categories")
-	if cacheCategories.Contains(name){
-		cat := cacheCategories.GetCategories()[name]
-		c.JSON(http.StatusOK, cat)
-	}else {
-		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": http.StatusNotFound})
-	}
-}
-
 func consult(c *gin.Context) {
 	cacheCategories := cache.GetInstanceCache()
 	c.JSON(http.StatusOK, cacheCategories.GetCategories())
 }
 
 func getPrice(c *gin.Context) {
-
 	name := c.Param("categories")
-
 	cacheCategories := cache.GetInstanceCache()
-
-	cat:= cacheCategories.GetCategory(name)
-	result, err := cat.GetPrices()
-
-	if err !=  nil{
-		c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": err.Error()})
+	cat, err := cacheCategories.GetCategory(name)
+	if err!=nil{
+		errorCategory(err, c, name)
+	}
+	if result, err := cat.GetPrices(); err!=nil{
+		errorCategory(err, c, name)
 	}else {
 		c.JSON(http.StatusOK, result)
 	}
+}
+func errorCategory(err error, c *gin.Context, name string){
+	c.JSON(http.StatusNotFound,  gin.H{"categories": name, "status": err.Error()})
 }

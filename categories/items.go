@@ -10,7 +10,7 @@ import (
 type Item struct {
 	Id string `json:"id"`
 	Price float64 `json:"price"`
-	Last_Update time.Time
+	Last_Update time.Time `json:"last_updated"`
 }
 
 type Paging struct{
@@ -80,4 +80,10 @@ func findItems(category string, offset int, limit int, mItem[][] Item, orden str
 		return findItems(category, offset, limit, mItem,orden, f, page, porcenSample)
 	}
 	return mItem, nil
+}
+
+func findItem(id string)(*Item, error){
+	url := "https://api.mercadolibre.com/items/"+id+"?attributes=id,last_updated,price"
+	res := &Item{}
+	return res, library.DoRequest(url, "GET", &res)
 }

@@ -3,7 +3,9 @@ import "sync"
 import (
 	"sync/atomic"
 	"EjercicioIntegradorGo/categories"
+	"time"
 	"EjercicioIntegradorGo/library"
+	"errors"
 )
 
 var initialized uint32
@@ -25,21 +27,25 @@ func (c *CacheCategories) Remove (category *categories.Category){
 	delete(c.cache,category.Id)
 }
 
-func (c *CacheCategories) GetCategory(key string)(*categories.Category) {
-
+func (c *CacheCategories) GetCategory(key string)(*categories.Category, error) {
 	cat,exist := c.cache[key]
 	if exist {
-		return cat
+		cat.LastEntry = time.Now()
+		return cat, nil
 	}else{
 		mu.Lock()
 		defer mu.Unlock()
 		cat,exist := c.cache[key]
 		if !exist { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
-			cat = &categories.Category{Id: key}
-			c.Add(cat)
-			return cat
+			if err := verifyCategory(key); err == nil {
+				cat = &categories.Category{Id: key}
+				c.Add(cat)
+				return cat, nil
+			}else{
+				return nil, err
+			}
 		}else {
-			return cat
+			return cat, nil
 		}
 	}
 }
@@ -57,39 +63,26 @@ func (c *CacheCategories) Contains (key string) bool{
 }
 
 var cache *CacheCategories
-func GetInstanceCache() *CacheCategories {
 
+func GetInstanceCache() *CacheCategories {
 	if atomic.LoadUint32(&initialized) == 1 {
 		return cache
 	}
-
 	mu.Lock()
 	defer mu.Unlock()
-
 	if initialized == 0 {
-		if fillCache() {
-			atomic.StoreUint32(&initialized, 1)
-		}
+		cache = &CacheCategories{}
+		atomic.StoreUint32(&initialized, 1)
 	}
-
 	return cache
 }
 
-func fillCache() bool{
-
-	url := "https://api.mercadolibre.com/sites/MLA/categories"
-	vecCat := make([]categories.Category, 0, 31)
-	err := library.DoRequest(url, "GET",&vecCat)
-	if err != nil {
-		return false
+func verifyCategory (key string) (error){
+	url := "https://api.mercadolibre.com/categories/"+key+"?attributes=id"
+	res := &categories.Category{}
+	if err := library.DoRequest(url, "GET", &res); err != nil || res.Id == ""{
+		return errors.New("La categoria solicitada no existe")
 	}
+	return nil
 
-	cache = &CacheCategories{}
-
-	//for _, v := range vecCat {
-	for i:=0; i<len(vecCat); i++{
-		cache.Add(&vecCat[i])
-	}
-
-	return true
 }
