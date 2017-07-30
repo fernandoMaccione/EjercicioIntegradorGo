@@ -17,9 +17,6 @@ type CacheCategories struct{
 }
 
 func (c *CacheCategories) Add (category *categories.Category){
-	if c.cache == nil{
-		c.cache = make(map[string]*categories.Category)
-	}
 	c.cache[category.Id] = category
 }
 
@@ -30,22 +27,24 @@ func (c *CacheCategories) Remove (category *categories.Category){
 func (c *CacheCategories) GetCategory(key string)(*categories.Category, error) {
 	cat,exist := c.cache[key]
 	if exist {
+		cat = &categories.Category{Id: key, LastEntry:time.Now()}
+		c.Add(cat)
 		cat.LastEntry = time.Now()
 		return cat, nil
 	}else{
-		mu.Lock()
-		defer mu.Unlock()
-		cat,exist := c.cache[key]
-		if !exist { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
-			if err := verifyCategory(key); err == nil {
+		if err := verifyCategory(key); err == nil {
+			mu.Lock()
+			defer mu.Unlock()
+			cat,exist := c.cache[key]
+			if !exist { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
 				cat = &categories.Category{Id: key, LastEntry:time.Now()}
 				c.Add(cat)
 				return cat, nil
-			}else{
-				return nil, err
+			}else {
+				return cat, nil
 			}
-		}else {
-			return cat, nil
+		}else{
+			return nil, err
 		}
 	}
 }
@@ -77,6 +76,7 @@ func GetInstanceCache() *CacheCategories {
 	defer mu.Unlock()
 	if initialized == 0 {
 		cache = &CacheCategories{}
+		cache.cache = make(map[string]*categories.Category)
 		atomic.StoreUint32(&initialized, 1)
 		go refreshCache()
 	}

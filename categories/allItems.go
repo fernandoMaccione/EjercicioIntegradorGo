@@ -7,10 +7,7 @@ import (
 )
 
 func  fillAllPrice( c *Category)(err error) {
-	conf, err := config.GetInstance()
-	if err != nil {
-		return err
-	}
+	conf := config.GetInstance()
 	var fillPrice FillPrice
 	if conf.MethodFill == 1 {
 		fillPrice = FillPriceByRelevance

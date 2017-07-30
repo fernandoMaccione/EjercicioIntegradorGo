@@ -54,7 +54,7 @@ func (c *Category) GetPrices()(*Prices, error){
 }
 
 func (c *Category) ValidateState() (err error){
-	conf, _ := config.GetInstance()
+	conf:= config.GetInstance()
 
 	if c.lastUpdateTotal.Add(time.Hour *conf.HourUpdateTotal).Before(time.Now()){
 		err = fillAllPrice(c)

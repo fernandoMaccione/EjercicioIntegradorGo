@@ -36,8 +36,7 @@ var FillPriceTotalItems FillPrice = func (categoria string)([][]Item, error){
 		}
 		return
 	}
-	conf, err := config.GetInstance()
-	if err != nil {return nil, err}
+	conf := config.GetInstance()
 
 	return findItems(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
 }
@@ -57,8 +56,7 @@ var FillPriceByRelevance FillPrice = func(categoria string)([][]Item, error){
 		return
 	}
 	var mItemRL [][]Item
-	conf, err := config.GetInstance()
-	if err != nil {return nil, err}
+	conf := config.GetInstance()
 	mItemRL, err =  findItems(categoria,0,conf.Limit,nil, "relevance", calculateOffsetREL, 0, conf.PorcentItems) //Busco los mas relevantes
 	mItemRL = append(mItemRL, mItem[0], mItem[1])
 	return mItemRL, err

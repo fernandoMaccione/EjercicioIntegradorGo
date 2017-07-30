@@ -14,17 +14,14 @@ func refreshCache(){
 		}
 	}()
 
-	if conf, err := config.GetInstance(); err == nil {
-		log.Println("Se inicio la terea de refresco de cache exitosamente")
-		for {
-			time.Sleep(conf.MinRefreshCache * time.Minute)
-			log.Println("Ejecutando refresco de cache...")
-			if err := refresh(conf); err != nil{
-				log.Printf("Ocurrieron error al ejecutar al refrescar el cache: ", err)
-			}
+	conf:= config.GetInstance()
+	log.Println("Se inicio la terea de refresco de cache exitosamente")
+	for {
+		time.Sleep(conf.MinRefreshCache * time.Minute)
+		log.Println("Ejecutando refresco de cache...")
+		if err := refresh(conf); err != nil{
+			log.Printf("Ocurrieron error al ejecutar al refrescar el cache: ", err)
 		}
-	}else{
-		log.Printf("No pudo inicializarce la tarea de refresco y limpieza de cache, su aplicaciónn colapsara.........", err)
 	}
 }
 
