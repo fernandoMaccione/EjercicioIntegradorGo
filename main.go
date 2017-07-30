@@ -35,8 +35,7 @@ func getPrice(c *gin.Context) {
 	cat, err := cacheCategories.GetCategory(name)
 	if err!=nil{
 		errorCategory(err, c, name)
-	}
-	if result, err := cat.GetPrices(); err!=nil{
+	}else if result, err := cat.GetPrices(); err!=nil{
 		errorCategory(err, c, name)
 	}else {
 		c.JSON(http.StatusOK, result)

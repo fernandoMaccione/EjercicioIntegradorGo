@@ -12,6 +12,8 @@ type Config struct {
 	Limit            int
 	MinUpdatePartial time.Duration
 	HourUpdateTotal  time.Duration
+	MinRefreshCache	time.Duration
+	MinOldEntry time.Duration
 }
 var initialized uint32
 var mu sync.Mutex
@@ -38,6 +40,6 @@ func GetInstance() (*Config,error) {
 
 func fillCache()(error){
 	//En la versión 2 hago que esto se levante de un archivo de configuración.
-	conf = &Config{MethodFill: 1, PorcentItems: 5, Limit: 100, MinUpdatePartial: 60, HourUpdateTotal: 12}
+	conf = &Config{MethodFill: 1, PorcentItems: 5, Limit: 100, MinUpdatePartial: 2, HourUpdateTotal: 12, MinOldEntry:120, MinRefreshCache:1}
 	return  nil
  }

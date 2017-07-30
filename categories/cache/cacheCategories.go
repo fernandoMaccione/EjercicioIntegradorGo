@@ -38,7 +38,7 @@ func (c *CacheCategories) GetCategory(key string)(*categories.Category, error) {
 		cat,exist := c.cache[key]
 		if !exist { //is ya existe, es porque justo la petición anterior que bloqueó el proceso la creo entonces devuevlo esa
 			if err := verifyCategory(key); err == nil {
-				cat = &categories.Category{Id: key}
+				cat = &categories.Category{Id: key, LastEntry:time.Now()}
 				c.Add(cat)
 				return cat, nil
 			}else{
@@ -64,6 +64,11 @@ func (c *CacheCategories) Contains (key string) bool{
 
 var cache *CacheCategories
 
+func  CleanCache (){
+	cache = nil
+	atomic.StoreUint32(&initialized, 0)
+}
+
 func GetInstanceCache() *CacheCategories {
 	if atomic.LoadUint32(&initialized) == 1 {
 		return cache
@@ -73,6 +78,7 @@ func GetInstanceCache() *CacheCategories {
 	if initialized == 0 {
 		cache = &CacheCategories{}
 		atomic.StoreUint32(&initialized, 1)
+		go refreshCache()
 	}
 	return cache
 }

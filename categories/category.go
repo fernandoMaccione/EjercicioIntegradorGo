@@ -5,7 +5,6 @@ import (
 	"sync/atomic"
 	"time"
 	"EjercicioIntegradorGo/config"
-	"log"
 )
 
 type Prices struct {
@@ -24,6 +23,14 @@ type Category struct {
 	LastEntry time.Time
 	initialized uint32
 	mu sync.Mutex
+}
+
+func (c *Category) Initialized() bool{
+	if atomic.LoadUint32(&c.initialized) == 1{
+		return true
+	}else{
+		return false
+	}
 }
 
 func (c *Category) GetPrices()(*Prices, error){
@@ -46,16 +53,13 @@ func (c *Category) GetPrices()(*Prices, error){
 	return c.prices, nil
 }
 
-func (c *Category) validateState() (err error){
+func (c *Category) ValidateState() (err error){
 	conf, _ := config.GetInstance()
 
 	if c.lastUpdateTotal.Add(time.Hour *conf.HourUpdateTotal).Before(time.Now()){
 		err = fillAllPrice(c)
 	}else if c.lastUpdatePartial.Add(time.Minute *conf.MinUpdatePartial).Before(time.Now()){
 		err = calcatePricePartial(c) //Pregunto item x item cual fue el que tuvo novedad y actualizo las precios solo en base a ese.
-	}
-	if err != nil{
-		log.Fatal("ValidateState: ", err)
 	}
 	return
 }
