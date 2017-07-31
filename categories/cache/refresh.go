@@ -19,13 +19,13 @@ func refreshCache(){
 	for {
 		time.Sleep(conf.MinRefreshCache * time.Minute)
 		log.Println("Ejecutando refresco de cache...")
-		if err := refresh(conf); err != nil{
+		if err := Refresh(conf); err != nil{
 			log.Printf("Ocurrieron error al ejecutar al refrescar el cache: ", err)
 		}
 	}
 }
 
-func refresh(config *config.Config) error{
+func Refresh(config *config.Config) error{
 	cache := GetInstanceCache()
 	for _,v := range cache.cache{
 		if  v.LastEntry.Add(time.Minute *config.MinOldEntry).Before(time.Now()) || !v.Initialized(){ //si por alguna razón tampoco se pudo inicializar, tambien la vuelo.

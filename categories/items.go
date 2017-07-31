@@ -17,7 +17,7 @@ type Paging struct{
 	Total int `json:"total"`
 }
 
-type response struct{
+type ResponseSearch struct{
 	Paging Paging `json:"paging"`
 	Site_id string `json:"site_id"`
 	Result []Item `json:"results"`
@@ -62,15 +62,16 @@ var FillPriceByRelevance FillPrice = func(categoria string)([][]Item, error){
 	return mItemRL, err
 }
 func findItems(category string, offset int, limit int, mItem[][] Item, orden string, f calculateOffset,page int, porcenSample float32)([][]Item, error){
-	url := "https://api.mercadolibre.com/sites/MLA/search?categories=" + category + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
-	res := &response{}
+	conf := config.GetInstance()
+	url := conf.UrlSearch + category + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
+	res := &ResponseSearch{}
 	err := library.DoRequest(url, "GET", &res)
 	if err != nil {return mItem, err}
 	if res.Paging.Total == 0 {return mItem, errors.New("No hay registro en la categoria")}
 	var pageTotales int
 	offset, pageTotales = f (res.Paging.Total, limit, offset, porcenSample)
 	if mItem == nil{
-		mItem = make([][]Item, pageTotales)
+		mItem = make([][]Item, pageTotales +1)
 	}
 	mItem[page] = res.Result
 	page++

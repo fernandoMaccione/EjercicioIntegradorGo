@@ -24,7 +24,7 @@ func  fillAllPrice( c *Category)(err error) {
 }
 
 func calculateTotalPrice (c *Category) error{
-	c.prices = &Prices{}
+	c.prices = &Prices{Max:c.items[0][0].Price, Min:c.items[0][0].Price}
 	var priceT float64
 	for _, vItem := range c.items {
 		c.cant += len(vItem)

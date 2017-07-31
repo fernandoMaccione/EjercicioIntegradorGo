@@ -1,0 +1,10 @@
+mode: set
+EjercicioIntegradorGo\main.go:10.13,18.2 5 1
+EjercicioIntegradorGo\main.go:21.27,24.2 2 1
+EjercicioIntegradorGo\main.go:27.30,30.2 2 1
+EjercicioIntegradorGo\main.go:32.31,36.13 4 1
+EjercicioIntegradorGo\main.go:36.13,38.3 1 1
+EjercicioIntegradorGo\main.go:38.3,38.51 1 1
+EjercicioIntegradorGo\main.go:38.51,40.3 1 0
+EjercicioIntegradorGo\main.go:40.3,42.3 1 1
+EjercicioIntegradorGo\main.go:44.59,46.2 1 1

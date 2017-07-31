@@ -27,8 +27,6 @@ func (c *CacheCategories) Remove (category *categories.Category){
 func (c *CacheCategories) GetCategory(key string)(*categories.Category, error) {
 	cat,exist := c.cache[key]
 	if exist {
-		cat = &categories.Category{Id: key, LastEntry:time.Now()}
-		c.Add(cat)
 		cat.LastEntry = time.Now()
 		return cat, nil
 	}else{

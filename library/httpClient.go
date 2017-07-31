@@ -10,7 +10,7 @@ func DoRequest(url string, method string, v interface{}) (error){
 	fmt.Println(method + url )
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal("NewRequest: ", err)
+		log.Printf("NewRequest: ", err)
 		return err
 	}
 
@@ -18,7 +18,7 @@ func DoRequest(url string, method string, v interface{}) (error){
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Do: ", err)
+		log.Printf("Do: ", err)
 		return  err
 	}
 
