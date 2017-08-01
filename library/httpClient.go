@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"encoding/json"
+	"EjercicioIntegradorGo/config"
+	"github.com/gin-gonic/gin"
 )
 
 func DoRequest(url string, method string, v interface{}) (error){
-	fmt.Println(method + url )
+	if config.GetInstance().GinMode == gin.DebugMode {
+		fmt.Println(method + url)
+	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Printf("NewRequest: ", err)

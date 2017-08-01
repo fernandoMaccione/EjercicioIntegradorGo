@@ -20,6 +20,7 @@ func  fillAllPrice( c *Category)(err error) {
 	}
 	c.lastUpdatePartial = time.Now()
 	c.lastUpdateTotal = time.Now()
+	c.cant = 0
 	return calculateTotalPrice(c)
 }
 

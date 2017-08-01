@@ -5,11 +5,12 @@ import (
 	/*"errors"
 	"fmt"*/
 	"EjercicioIntegradorGo/categories/cache"
+	"EjercicioIntegradorGo/config"
 )
 
 func main() {
 	router := gin.Default()
-
+	gin.SetMode(config.GetInstance().GinMode)
 	router.GET("/categories/:categories/price", getPrice)
 	router.GET("/name/:name", hola)
 	router.GET("/categories", consult)

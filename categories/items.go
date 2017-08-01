@@ -29,10 +29,10 @@ type FillPrice func(string)([][]Item, error)
 var FillPriceTotalItems FillPrice = func (categoria string)([][]Item, error){
 	var calcularOffsetMT calculateOffset = func (regTotales int, limit int, offset int, porcenSample float32) (offsetR int, pageTotales int){
 
-		regTotales = regTotales - limit
+		regTotales = regTotales
 		pageTotales = int(float32(regTotales/limit) * porcenSample / 100)
 		if pageTotales != 0{
-			offsetR = regTotales / pageTotales + 1 + offset
+			offsetR = regTotales / pageTotales  + offset
 		}
 		return
 	}
@@ -67,7 +67,9 @@ func findItems(category string, offset int, limit int, mItem[][] Item, orden str
 	res := &ResponseSearch{}
 	err := library.DoRequest(url, "GET", &res)
 	if err != nil {return mItem, err}
-	if res.Paging.Total == 0 {return mItem, errors.New("No hay registro en la categoria")}
+	if res.Paging.Total == 0 {
+		return mItem, errors.New("No hay registro en la categoria")
+	}
 	var pageTotales int
 	offset, pageTotales = f (res.Paging.Total, limit, offset, porcenSample)
 	if mItem == nil{
@@ -82,7 +84,7 @@ func findItems(category string, offset int, limit int, mItem[][] Item, orden str
 }
 
 func findItem(id string)(*Item, error){
-	url := "https://api.mercadolibre.com/items/"+id+"?attributes=id,last_updated,price"
+	url := config.GetInstance().UrlItem+id+"?attributes=id,last_updated,price"
 	res := &Item{}
 	return res, library.DoRequest(url, "GET", &res)
 }

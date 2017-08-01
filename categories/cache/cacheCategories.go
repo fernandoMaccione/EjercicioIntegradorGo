@@ -6,6 +6,7 @@ import (
 	"time"
 	"EjercicioIntegradorGo/library"
 	"errors"
+	"EjercicioIntegradorGo/config"
 )
 
 var initialized uint32
@@ -82,7 +83,7 @@ func GetInstanceCache() *CacheCategories {
 }
 
 func verifyCategory (key string) (error){
-	url := "https://api.mercadolibre.com/categories/"+key+"?attributes=id"
+	url := config.GetInstance().UrlCategory+key+"?attributes=id"
 	res := &categories.Category{}
 	if err := library.DoRequest(url, "GET", &res); err != nil || res.Id == ""{
 		return errors.New("La categoria solicitada no existe")

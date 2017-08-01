@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 	"log"
+	"github.com/gin-gonic/gin"
 )
 
 type Config struct {
@@ -15,6 +16,8 @@ type Config struct {
 	MinOldEntry time.Duration
 	UrlSearch string
 	UrlItem string
+	UrlCategory string
+	GinMode string
 }
 
 var conf *Config
@@ -35,6 +38,8 @@ func fillConfig()(error){
 		MinUpdatePartial: 40, HourUpdateTotal: 12, MinOldEntry:120,
 		MinRefreshCache:10,
 		UrlSearch:"https://api.mercadolibre.com/sites/MLA/search?categories=",
-		UrlItem:"https://api.mercadolibre.com/items/"}
+		UrlItem:"https://api.mercadolibre.com/items/",
+		UrlCategory:"https://api.mercadolibre.com/categories/",
+		GinMode:gin.ReleaseMode}
 	return  nil
  }

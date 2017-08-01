@@ -23,7 +23,7 @@ func calcatePricePartial(c *Category)  error{
 func recalculatePrice(c *Category, newItem *Item, item *Item){
 	if c.prices.Min>newItem.Price{
 		c.prices.Min = newItem.Price
-	}else if c.prices.Max < item.Price{
+	}else if c.prices.Max < newItem.Price{
 		c.prices.Max = newItem.Price
 	}
 	if c.cant > 0 {
