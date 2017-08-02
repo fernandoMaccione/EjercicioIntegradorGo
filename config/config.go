@@ -17,6 +17,7 @@ type Config struct {
 	UrlSearch string
 	UrlItem string
 	UrlCategory string
+	MaxGoRutine int
 	GinMode string
 }
 
@@ -34,12 +35,13 @@ func GetInstance() (*Config) {
 
 func fillConfig()(error){
 	//En la versión 2 hago que esto se levante de un archivo de configuración.
-	conf = &Config{MethodFill: 1, PorcentItems: 3, Limit: 100,
+	conf = &Config{MethodFill: 0, PorcentItems: 3, Limit: 100,
 		MinUpdatePartial: 40, HourUpdateTotal: 12, MinOldEntry:120,
 		MinRefreshCache:10,
 		UrlSearch:"https://api.mercadolibre.com/sites/MLA/search?category=",
 		UrlItem:"https://api.mercadolibre.com/items/",
 		UrlCategory:"https://api.mercadolibre.com/categories/",
+		MaxGoRutine:200,
 		GinMode:gin.DebugMode}
 	return  nil
  }
