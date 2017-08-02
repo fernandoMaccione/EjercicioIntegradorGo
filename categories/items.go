@@ -38,8 +38,7 @@ var FillPriceTotalItems FillPrice = func (categoria string)([][]Item, error){
 	}
 	conf := config.GetInstance()
 
-	//return findItems(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
-	return findByGoRutine(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
+	return findItems(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
 }
 var FillPriceByRelevance FillPrice = func(categoria string)([][]Item, error){
 	var calculateOffsetMAXMIN calculateOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){

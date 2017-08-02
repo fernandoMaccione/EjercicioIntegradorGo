@@ -5,61 +5,73 @@ import (
 	"strconv"
 	"EjercicioIntegradorGo/library"
 	"errors"
+	"log"
 )
 
-var FillPriceTotalItemsGoRutine FillPrice = func (categoria string)([][]Item, error){
-	var calcularOffsetMT calculateOffset = func (regTotales int, limit int, offset int, porcenSample float32) (offsetR int, pageTotales int){
+var FillPriceItemsGoRutine FillPrice = func (category string)([][]Item, error){
 
-		regTotales = regTotales
-		pageTotales = int(float32(regTotales/limit) * porcenSample / 100)
-		if pageTotales != 0{
-			offsetR = regTotales / pageTotales  + offset
-		}
-		return
+	pageTotales, err := getTotalPage(category)
+	if (err!= nil){
+		return nil, err
 	}
-	conf := config.GetInstance()
 
-	return findByGoRutine(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
-}
-
-func findByGoRutine(category string, offset int, limit int, mItem[][] Item, orden string, f calculateOffset,page int, porcenSample float32)([][]Item, error){
+	mItem := make([][]Item, pageTotales +2)
 	conf := config.GetInstance()
-	url := conf.UrlSearch + category + "&offset=" + strconv.Itoa(offset)+ "&limit=1&sort=" + orden
-	res := &ResponseSearch{}
-	err := library.DoRequest(url, "GET", &res)
-	if err != nil {return mItem, err}
-	if res.Paging.Total == 0 {
-		return mItem, errors.New("No hay registro en la categoria")
-	}
-	var pageTotales int
-	offset, pageTotales = f (res.Paging.Total, limit, offset, porcenSample)
-	mItem = make([][]Item, pageTotales +1)
-	//Declaro un channel por pagina
-	nCham := pageTotales +1
-	if (pageTotales>conf.MaxGoRutine){
+	
+	nCham := pageTotales
+	if (nCham>conf.MaxGoRutine){
 		nCham = conf.MaxGoRutine
 	}
 
 	var chans =  []chan ResponseSearch{}
-	for i:=0; i<nCham; i++{
+	for i:=0; i<nCham + 2; i++{
 		tmp := make(chan ResponseSearch)
 		chans = append(chans, tmp)
-		go findItemsGoRutine(category, limit * i , limit, orden, tmp)
+		switch i {
+		case nCham : go findItemsGoRutine(category, 0, 1, "price_asc", tmp)
+		case nCham +1: go findItemsGoRutine(category, 0, 1, "price_desc", tmp)
+		default: go findItemsGoRutine(category, conf.Limit*i, conf.Limit, "relevance", tmp)
+		}
 	}
 
 	for i,ch := range chans{
-		resp := <- ch
-		mItem[i] = resp.Result
+		resp, ok := <- ch
+		if ok{
+			mItem[i] = resp.Result
+		}
 	}
 	return mItem, nil
 }
 
+func getTotalPage(category string)(int, error){
+	conf := config.GetInstance()
+	url := conf.UrlCategory + category + "?attributes=total_items_in_this_category"
+	res := struct {Total_items int `json:"total_items_in_this_category"` }{}
+	err := library.DoRequest(url, "GET", &res)
+	if err != nil {return 0, err}
+	if res.Total_items == 0 {
+		return 0, errors.New("No hay registro en la categoria")
+	}
+
+	pageTotales := int(float32(res.Total_items/conf.Limit) * conf.PorcentItems / 100)
+	if (pageTotales<1){
+		return 1, nil
+	}
+	return pageTotales, nil
+}
+
 func findItemsGoRutine(category string, offset int, limit int, orden string, ch chan ResponseSearch){
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Error al buscar los item de la categoría: ", err)
+		}
+		close(ch)
+	}()
 	conf := config.GetInstance()
 	url := conf.UrlSearch + category + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
 	res := &ResponseSearch{}
-	library.DoRequest(url, "GET", &res)
-	//if err != nil {return mItem, err}
-
-	ch <- *res
+	err := library.DoRequest(url, "GET", &res)
+	if err == nil {
+		ch <- *res
+	}
 }
