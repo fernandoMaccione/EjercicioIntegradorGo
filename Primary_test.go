@@ -10,7 +10,6 @@ import (
 	"EjercicioIntegradorGo/categories"
 	"strconv"
 	"net/http"
-
 	"EjercicioIntegradorGo/library"
 	"EjercicioIntegradorGo/categories/cache"
 )
@@ -58,7 +57,7 @@ func getCategory(c *gin.Context){
 	category := params[0]
 
 	if category == "MLA1000" || category == "MLA1004" || category == "MLA9999"{
-		c.JSON(http.StatusOK, &categories.Category{Id:category})
+		c.JSON(http.StatusOK,  gin.H{"Id": category, "total_items_in_this_category":len(items)})
 	}else{
 		c.JSON(http.StatusOK, &categories.Category{Id:""})
 	}
@@ -72,11 +71,11 @@ func getSearch(c *gin.Context){
 
 	limit,_ := strconv.Atoi(strings.Split(params[2],"=")[1])
 
-	pag := &categories.Paging{len(items)}
+	pag := categories.Paging{len(items)}
 	var cat1 *categories.ResponseSearch
 	if limit > len(items){limit = len(items)}
 	if category == "MLA1000" || category == "MLA1004" {
-		cat1 = &categories.ResponseSearch{Paging: *pag, Site_id: "MLA", Result: items[offset: offset+limit]}
+		cat1 = &categories.ResponseSearch{Paging: pag, Site_id: "MLA", Result: items[offset: offset+limit]}
 	}else{
 		cat1 = &categories.ResponseSearch{Paging: categories.Paging{Total:0}, Site_id: "MLA"}
 	}
@@ -162,6 +161,31 @@ func TestPriceByTotal (t *testing.T){
 		}
 	}
 	t.Logf("----------------------testeo de calculo por total Ok----------------------")
+}
+
+func TestPriceByGoRutine (t *testing.T){
+	t.Logf("----------------------Iniciando testeo de calculo con GoRutina...----------------------")
+	conf := config.GetInstance()
+	conf.UrlSearch = "http://localhost:9090/search/"
+	conf.UrlCategory = "http://localhost:9090/categories/"
+	conf.Limit = 5
+	conf.MethodFill = 2
+	conf.MaxGoRutine = 50
+	conf.PorcentItems = 100
+
+	cat := &categories.Category{Id:"MLA1000"}
+	result, err := cat.GetPrices()
+
+	if err!=nil{
+		t.Fatalf("Resultado con error %v", err)
+	}else {
+		if (result.Max == 1333 && result.Min == 10 && int(result.Suggested) == 225){
+			t.Logf("Resultado ok %v", result)
+		}else{
+			t.Fatalf("El resultado del caluclo no es el esperado %v", result)
+		}
+	}
+	t.Logf("----------------------testeo de calculo con GoRutina Ok----------------------")
 }
 
 func TestRefreshPricePartial (t *testing.T){
