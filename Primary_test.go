@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"EjercicioIntegradorGo/library"
 	"EjercicioIntegradorGo/categories/cache"
+	"errors"
 )
 
 func TestMain(m *testing.M) {
@@ -354,7 +355,7 @@ func TestBlackGetPrice (t *testing.T){
 
 	t.Logf("----------------------Iniciando testeo de caja negra del metodo Price----------------------")
 	var r = &categories.Prices{}
-	err := library.DoRequest("http://localhost:9080/categories/MLA1000/price", "GET", r)
+	err := library.DoRequest("http://localhost:80/categories/MLA1000/price", "GET", r)
 
 	if err != nil{
 		t.Fatalf("El metodo respondio con error %v", err)
@@ -371,7 +372,7 @@ func TestBlackGetPrice (t *testing.T){
 func TestBlackGetPriceCache (t *testing.T){
 	t.Logf("----------------------Iniciando testeo de caja negra del metodo Price pidiendo un dato cacheado----------------------")
 	var r = &categories.Prices{}
-	err := library.DoRequest("http://localhost:9080/categories/MLA1000/price", "GET", r)
+	err := library.DoRequest("http://localhost:80/categories/MLA1000/price", "GET", r)
 
 	if err != nil{
 		t.Fatalf("El metodo respondio con error %v", err)
@@ -388,7 +389,7 @@ func TestBlackGetPriceCache (t *testing.T){
 func TestBlackOutCategory (t *testing.T){
 	t.Logf("----------------------Iniciando testeo de caja negra del metodo Price pidiendo una categoria inexistente----------------------")
 	var result = &categories.Prices{}
-	err := library.DoRequest("http://localhost:9080/categories/MLA100443430/price", "GET", result)
+	err := library.DoRequest("http://localhost:80/categories/MLA100443430/price", "GET", result)
 
 	if err!=nil{
 		t.Fatalf("Resultado con error %v", err)
@@ -401,7 +402,7 @@ func TestBlackOutCategory (t *testing.T){
 func TestBlackCategoryOutItems (t *testing.T){
 	t.Logf("----------------------Iniciando testeo de caja negra del metodo Price pidiendo una categoria sin items----------------------")
 	var result = &categories.Prices{}
-	err := library.DoRequest("http://localhost:9080/categories/MLA9999/price", "GET", result)
+	err := library.DoRequest("http://localhost:80/categories/MLA9999/price", "GET", result)
 
 	if err!=nil{
 		t.Fatalf("Resultado con error %v", err)
@@ -414,13 +415,100 @@ func TestBlackCategoryOutItems (t *testing.T){
 func TestHolaApi (t *testing.T){
 
 	var result = &categories.Prices{}
-	library.DoRequest("http://localhost:9080/name/Api", "GET", result)
+	library.DoRequest("http://localhost:80/name/Api", "GET", result)
 
 }
 
 func TestConsult (t *testing.T){
 
 	var result = &categories.Prices{}
-	library.DoRequest("http://localhost:9080/categories", "GET", result)
+	library.DoRequest("http://localhost:80/categories", "GET", result)
+
+}
+
+func TestConcurrency(t *testing.T){
+	t.Logf("----------------------Iniciando testeo de Refresco total del precio de los items----------------------")
+	conf := config.GetInstance()
+	conf.UrlSearch = "http://localhost:9090/search/"
+	conf.UrlItem = "http://localhost:9090/item/"
+	conf.UrlCategory = "http://localhost:9090/categories/"
+	conf.Limit = 5
+	conf.MethodFill = 2
+	conf.PorcentItems = 100
+	conf.HourUpdateTotal = 120 // lo pongo en 0 para que asuma que el precio que está cacheado en el calculo ya es obsoleto
+	conf.MinRefreshCache = 40
+	conf.MinUpdatePartial = 60
+
+	// le pego hasta 10000 veces x por categorias distintas
+	var chansMLA1000 =  []chan categories.Prices{}
+	for i :=0; i<3000; i++{
+		tmp := make(chan categories.Prices)
+		chansMLA1000 = append(chansMLA1000, tmp)
+		go gofindPrice("MLA1000", tmp)
+	}
+
+	var chansMLA1004 =  []chan categories.Prices{}
+	for i :=0; i<3000; i++{
+		tmp := make(chan categories.Prices)
+		chansMLA1004 = append(chansMLA1004, tmp)
+		go gofindPrice("MLA1004", tmp)
+	}
+
+	var chansMLA3530 =  []chan categories.Prices{}
+	for i :=0; i<3000; i++{
+		tmp := make(chan categories.Prices)
+		chansMLA3530 = append(chansMLA3530, tmp)
+		go gofindPrice("MLA3530", tmp)
+	}
+
+	for _,ch := range chansMLA1000{
+		result, ok := <- ch
+		if ok{
+			if (result.Max == 2000 && result.Min == 5 && int(result.Suggested) == 641){
+				t.Logf("Resultado ok %v", result)
+			}else{
+				t.Fatalf("El resultado del caluclo no es el esperado %v", result)
+			}
+		}else {
+			t.Fatalf("El canal esta cerrado")
+		}
+	}
+	for _,ch := range chansMLA1004{
+		result, ok := <- ch
+		if ok{
+			if (result.Max == 2000 && result.Min == 5 && int(result.Suggested) == 595){
+				t.Logf("Resultado ok %v", result)
+			}else{
+				t.Fatalf("El resultado del caluclo no es el esperado %v", result)
+			}
+		}else {
+			t.Fatalf("El canal esta cerrado")
+		}
+	}
+	for _,ch := range chansMLA3530{
+		result, ok := <- ch
+		if ok{
+			if (result.Max == 0 && result.Min == 0 && int(result.Suggested) == 0){
+				t.Logf("Resultado ok %v", result)
+			}else{
+				t.Fatalf("El resultado del caluclo no es el esperado %v", result)
+			}
+		}else {
+			t.Fatalf("El canal esta cerrado")
+		}
+	}
+}
+
+func gofindPrice(category string, ch chan categories.Prices){
+	var r = &categories.Prices{}
+	//err := library.DoRequest("http://localhost:80/categories/"+category+"/price", "GET", r)
+	err := library.DoRequest("http://ec2-34-229-16-115.compute-1.amazonaws.com/categories/"+category+"/price", "GET", r)
+
+	if err == nil {
+		ch <- *r
+	}else{
+		panic(errors.New("No fue posible testear concurrencia"))
+	}
+	close (ch)
 
 }

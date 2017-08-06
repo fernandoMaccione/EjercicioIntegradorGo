@@ -26,41 +26,7 @@ type ResponseSearch struct{
 type calculateOffset func(int, int, int, float32)(int, int)
 type FillPrice func(string)([][]Item, error)
 
-var FillPriceTotalItems FillPrice = func (categoria string)([][]Item, error){
-	var calcularOffsetMT calculateOffset = func (regTotales int, limit int, offset int, porcenSample float32) (offsetR int, pageTotales int){
 
-		regTotales = regTotales
-		pageTotales = int(float32(regTotales/limit) * porcenSample / 100)
-		if pageTotales != 0{
-			offsetR = regTotales / pageTotales  + offset
-		}
-		return
-	}
-	conf := config.GetInstance()
-
-	return findItems(categoria,0,conf.Limit,nil, "relevance", calcularOffsetMT, 0, conf.PorcentItems)
-}
-var FillPriceByRelevance FillPrice = func(categoria string)([][]Item, error){
-	var calculateOffsetMAXMIN calculateOffset = func (regTotales int, limit int, offset int, porcentajeMuestreo float32) (offsetR int, pageTotales int){
-		return 1,1
-	}
-	mItem := make([][]Item, 2)
-	mItem, err :=  findItems(categoria,0,1,mItem, "price_asc", calculateOffsetMAXMIN, 0, 100) //Busco el maximo
-	if err!=nil {return nil, err}
-	mItem, err =  findItems(categoria,0,1,mItem, "price_desc", calculateOffsetMAXMIN, 1, 100) //Busco el maximo
-	if err!=nil{return nil, err}
-
-	var calculateOffsetREL calculateOffset = func (regTotales int, limit int, offset int, porcenSample float32) (offsetR int, pageTotales int){
-		pageTotales = int(float32(regTotales/limit) * porcenSample / 100)
-		offsetR = limit + offset
-		return
-	}
-	var mItemRL [][]Item
-	conf := config.GetInstance()
-	mItemRL, err =  findItems(categoria,0,conf.Limit,nil, "relevance", calculateOffsetREL, 0, conf.PorcentItems) //Busco los mas relevantes
-	mItemRL = append(mItemRL, mItem[0], mItem[1])
-	return mItemRL, err
-}
 func findItems(category string, offset int, limit int, mItem[][] Item, orden string, f calculateOffset,page int, porcenSample float32)([][]Item, error){
 	conf := config.GetInstance()
 	url := conf.UrlSearch + category + "&offset=" + strconv.Itoa(offset)+ "&limit=" + strconv.Itoa(limit) + "&sort=" + orden
