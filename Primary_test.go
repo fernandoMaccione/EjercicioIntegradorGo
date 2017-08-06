@@ -21,6 +21,7 @@ func TestMain(m *testing.M) {
 		UrlItem:"https://api.mercadolibre.com/items/"}
 		UrlCategoria https://api.mercadolibre.com/categories/
 	 */
+	config.GetInstance().GinMode = gin.ReleaseMode
 	router := gin.Default()
 	gin.SetMode(config.GetInstance().GinMode)
 	router.GET("/search/:categories", getSearch)
@@ -427,7 +428,7 @@ func TestConsult (t *testing.T){
 }
 
 func TestConcurrency(t *testing.T){
-	t.Logf("----------------------Iniciando testeo de Refresco total del precio de los items----------------------")
+	t.Logf("----------------------Iniciando test de concurrencia----------------------")
 	conf := config.GetInstance()
 	conf.UrlSearch = "http://localhost:9090/search/"
 	conf.UrlItem = "http://localhost:9090/item/"
@@ -439,23 +440,24 @@ func TestConcurrency(t *testing.T){
 	conf.MinRefreshCache = 40
 	conf.MinUpdatePartial = 60
 
+
 	// le pego hasta 10000 veces x por categorias distintas
 	var chansMLA1000 =  []chan categories.Prices{}
-	for i :=0; i<3000; i++{
+	for i :=0; i<500; i++{
 		tmp := make(chan categories.Prices)
 		chansMLA1000 = append(chansMLA1000, tmp)
 		go gofindPrice("MLA1000", tmp)
 	}
 
 	var chansMLA1004 =  []chan categories.Prices{}
-	for i :=0; i<3000; i++{
+	for i :=0; i<500; i++{
 		tmp := make(chan categories.Prices)
 		chansMLA1004 = append(chansMLA1004, tmp)
 		go gofindPrice("MLA1004", tmp)
 	}
 
 	var chansMLA3530 =  []chan categories.Prices{}
-	for i :=0; i<3000; i++{
+	for i :=0; i<500; i++{
 		tmp := make(chan categories.Prices)
 		chansMLA3530 = append(chansMLA3530, tmp)
 		go gofindPrice("MLA3530", tmp)
@@ -497,12 +499,13 @@ func TestConcurrency(t *testing.T){
 			t.Fatalf("El canal esta cerrado")
 		}
 	}
+	t.Logf("----------------------finalizado test de concurrencia----------------------")
 }
 
 func gofindPrice(category string, ch chan categories.Prices){
 	var r = &categories.Prices{}
-	//err := library.DoRequest("http://localhost:80/categories/"+category+"/price", "GET", r)
-	err := library.DoRequest("http://ec2-34-229-16-115.compute-1.amazonaws.com/categories/"+category+"/price", "GET", r)
+	err := library.DoRequest("http://localhost:80/categories/"+category+"/price", "GET", r)
+	//err := library.DoRequest("http://ec2-34-229-16-115.compute-1.amazonaws.com/categories/"+category+"/price", "GET", r)
 
 	if err == nil {
 		ch <- *r

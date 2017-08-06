@@ -42,6 +42,6 @@ func fillConfig()(error){
 		UrlItem:"https://api.mercadolibre.com/items/",
 		UrlCategory:"https://api.mercadolibre.com/categories/",
 		MaxGoRutine:100,
-		GinMode:gin.DebugMode}
+		GinMode:gin.ReleaseMode}
 	return  nil
  }
