@@ -9,10 +9,10 @@ import (
 func  fillAllPrice( c *Category)(err error) {
 	conf := config.GetInstance()
 	var fillPrice FillPrice
-	if conf.MethodFill == 1 {
-		fillPrice = FillPriceByRelevance
-	} else {
-		fillPrice = FillPriceTotalItems
+	switch conf.MethodFill{
+		case 0: fillPrice = FillPriceTotalItems
+		case 1: fillPrice = FillPriceByRelevance
+		case 2: fillPrice = FillPriceItemsGoRutine
 	}
 	c.items, err = fillPrice(c.Id)
 	if err != nil {

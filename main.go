@@ -14,8 +14,9 @@ func main() {
 	router.GET("/categories/:categories/price", getPrice)
 	router.GET("/name/:name", hola)
 	router.GET("/categories", consult)
+//	router.GET("/refreshCache", refreshCache)
 
-	router.Run(":9080")
+	router.Run(":80")
 }
 
 
@@ -23,8 +24,16 @@ func hola (c *gin.Context){
 	name := c.Param("name")
 	c.String(http.StatusOK, "Hola!!!  " + name)
 }
-
-
+/*
+func refreshCache (c *gin.Context){
+	err := cache.Refresh(config.GetInstance())
+	if (err!=nil) {
+		c.JSON(http.StatusNotFound,  gin.H{"status": err.Error()})
+	}else{
+		c.String(http.StatusOK, "Refresco Exitoso")
+	}
+}
+*/
 func consult(c *gin.Context) {
 	cacheCategories := cache.GetInstanceCache()
 	c.JSON(http.StatusOK, cacheCategories.GetCategories())
